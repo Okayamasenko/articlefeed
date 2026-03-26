@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash(ln:*)",
+      "Bash(pdftotext:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(chmod +x:*)"
+    ]
+  }
+}
