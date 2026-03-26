@@ -1,6 +1,6 @@
 ---
 name: articlefeed
-description: Academic paper reading system — find papers via Semantic Scholar, read with structured notes, discuss with auto-recording, track progress. 7 commands: /setup /feed /read /discuss /recap /update /sync
+description: "Academic paper reading system — find papers via Semantic Scholar, read with structured notes, discuss with auto-recording, track progress. 7 commands: /setup /feed /read /discuss /recap /update /sync"
 metadata:
   openclaw:
     requires:
