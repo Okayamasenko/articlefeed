@@ -31,8 +31,13 @@
 - 笔记文件路径格式（`notes/YYYY-MM-DD/PaperName/PaperName.md`）
 
 **③ 自动同步规则一致性**
-`/read` 完成后需要同步三个地方（reading_list.md / search_config.json / MEMORY.md Reading Progress）。
-检查 `read.md`、`MEMORY.md` 的 Auto-sync Rules 以及 `CLAUDE.md` 的精读同步规则是否三处一致。
+`/read` 完成后需要同步三个地方（reading_list.md 的近期活跃阅读区 / search_config.json 的 based_on_notes / MEMORY.md Reading Progress）。
+检查 `read.md`、`MEMORY.md` 的 Auto-sync Rules 以及 `CLAUDE.md` 的精读同步规则是否三处一致，包括：
+- reading_list.md 写入 `## 近期活跃阅读` 区块（不是任意分类）
+- based_on_notes 追加不删除（无滑动窗口截断）
+- Reading Progress 追加不删除（无滑动窗口截断）
+- `/read` 不修改 `update_reason`（仅 `/feed` 写入）
+- `/recap` 负责将活跃区移入归档区并生成阶段摘要
 
 **④ 逻辑冲突检查**
 检查各命令之间是否存在矛盾描述（如同一字段的命名、同一文件的写入格式等）。

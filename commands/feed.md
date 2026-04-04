@@ -5,15 +5,24 @@
 ## 步骤
 
 ### 1. 读取当前阅读状态
-读取 `config.json` 获取 `data_dir`（`notes_dir` = `data_dir/notes`），再读取 `data_dir/notes/reading_list.md`，了解：
-- 已读论文（`[x]`）及其主题
-- 未读但已下载的论文
+
+读取 `config.json` 获取 `data_dir`（`notes_dir` = `data_dir/notes`），然后按以下顺序读取上下文：
+
+**必读（每次都读）：**
+- `data_dir/notes/reading_list.md` 的 `## 近期活跃阅读` 区块（近期精读的论文，直接反映当前关注点）
+- `memory/MEMORY.md`（研究方向、理论框架、Reading Progress 全部记录）
+
+**若存在则读（补充长线记忆）：**
+- `data_dir/notes/recaps/` 下最新一份 `YYYY-MM-DD_recap.md`（由 `/recap` 生成的阶段性研究版图摘要，包含已归档论文的提炼）
+
+**不需要读：**
+- `reading_list.md` 的 `## 历史归档` 区块（已由 recap 摘要覆盖，无需逐条重读）
 
 ### 2. 更新 search_config.json
-基于已读论文的主题和理论框架，更新 `search_config.json` 中的 `tiers.tier1/tier2/tier3.terms`，同时更新：
+基于活跃阅读区的论文主题、MEMORY 中的研究方向、以及最新 recap 摘要（若有），更新 `search_config.json` 中的 `tiers.tier1/tier2/tier3.terms`，同时更新：
 - `last_updated`：今天日期
-- `based_on_notes`：已读笔记的文件名列表（滑动窗口最多 25 条，超出时删除最旧的）
-- `update_reason`：简要说明本次更新的依据
+- `based_on_notes`：将本次参考的笔记文件名追加进列表（不删除旧条目，完整保留）
+- `update_reason`：简要说明本次更新的依据（2-4 句，不要写成编年史）
 
 搜索词原则（参考 MEMORY.md 里的研究方向）：
 - Tier 1：核心研究问题直接相关的关键词
@@ -53,9 +62,9 @@ python recommend.py
    - **存 PDF**：将下载的文件复制/移动到该文件夹，重命名为 `PaperName.pdf`
    - **存 MD**：将笔记保存为 `PaperName.md`
    - **同步三处**（自动执行，不提醒用户）：
-     - `reading_list.md`：添加 `[x]` 条目，附相对链接
-     - `search_config.json` `based_on_notes`：添加笔记文件名，滑动窗口最多 25 条
-     - `MEMORY.md` `Reading Progress`：追加一行，滑动窗口最多 20 条
+     - `reading_list.md` 的 `## 近期活跃阅读`：添加 `[x]` 条目，附相对链接
+     - `search_config.json` `based_on_notes`：追加笔记文件名（不删旧条目）
+     - `MEMORY.md` `Reading Progress`：追加一行（不删旧条目）
 3. 在 recommendations.md 中标注：`✓ 已下载并精读`
 
 **如果没有开放获取 PDF：**

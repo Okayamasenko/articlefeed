@@ -48,9 +48,30 @@ python lookup_paper.py --title "标题关键词"
 - 将笔记保存为 `PaperName.md`
 
 ### 7. 同步更新（自动执行，无需提醒）
-- **reading_list.md**：在对应分类下加 `[x]` 条目，填写相对路径链接 `YYYY-MM-DD/PaperName/PaperName.md`
-- **search_config.json**：将笔记文件名加入 `based_on_notes`，更新 `last_updated` 和 `update_reason`；滑动窗口最多 25 条
-- **memory/MEMORY.md**：在 `Reading Progress` 下追加一行（笔记文件名 + 一句话主题）；滑动窗口最多 20 条
+
+**reading_list.md**：在 `## 近期活跃阅读` 区块下加 `[x]` 条目，填写相对路径链接 `YYYY-MM-DD/PaperName/PaperName.md`。若该区块不存在，则在文件顶部新建（见下方说明）。
+
+**search_config.json**：将笔记文件名追加到 `based_on_notes` 列表末尾，同时更新 `last_updated`。**不修改 `update_reason`**（`update_reason` 仅由 `/feed` 在更新检索词时写入，避免每次精读都刷新导致 JSON 膨胀）。
+
+**memory/MEMORY.md**：在 `## Reading Progress` 区块下追加一行，格式：`- PaperName.md — 一句话核心贡献`。**不删除旧条目**，完整保留所有历史记录。每条控制在一行内（不超过 80 字）。
 
 ### 8. 汇报
 告知用户笔记已保存的位置，并简要说明最重要的一条可借鉴之处。
+
+---
+
+## reading_list.md 的活跃区与归档区说明
+
+`reading_list.md` 分为两个区域：
+
+```
+## 近期活跃阅读
+（最近一批精读的论文，/feed 时重点参考这里）
+
+## 历史归档
+（/recap 时由 Claude 整理移入，永久保留）
+```
+
+- `/read` 每次将新论文写入 `## 近期活跃阅读`。
+- `/recap` 负责将活跃区的论文批量移入 `## 历史归档`，并生成阶段摘要。
+- **不删除任何条目**，归档只是移动，不是删除。
