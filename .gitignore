@@ -1,0 +1,21 @@
+# 个人配置（由 install.sh 从 template/ 复制，含个人路径/数据，不入库）
+/config.json
+/search_config.json
+/interest_profile.json
+.claude/settings.local.json
+
+# 软链接目标（install.sh 自动创建，指向个人记忆目录）
+memory
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 大文件 / 编译产物
+DesktopApp.zip
+DesktopApp/ArticleFeed.app

@@ -1,0 +1,25 @@
+{
+  "last_updated": "YYYY-MM-DD",
+  "active_seed_papers": [
+    {
+      "s2_id": "待 /setup 后由 Claude 填写",
+      "title": "你的核心先行研究论文",
+      "why_seed": "说明这篇论文与你研究的直接关联"
+    }
+  ],
+  "known_gaps": [
+    "你的文献网络目前缺少的研究角度（/feed 优先填补这里）"
+  ],
+  "known_authors": [
+    {
+      "name": "值得追踪新论文的作者",
+      "s2_author_id": "",
+      "affiliation": "",
+      "follow": true,
+      "reason": "追踪原因"
+    }
+  ],
+  "do_not_recommend": [
+    "不相关的研究场景或主题（/feed 遴选时过滤这类候选）"
+  ]
+}

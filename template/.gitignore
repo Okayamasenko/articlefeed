@@ -1,0 +1,10 @@
+# 由 install.sh 生成，用户本地专属，不入库
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
