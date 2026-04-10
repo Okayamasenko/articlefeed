@@ -55,7 +55,24 @@ python lookup_paper.py --title "标题关键词"
 
 **memory/MEMORY.md**：在 `## Reading Progress` 区块下追加一行，格式：`- PaperName.md — 一句话核心贡献`。**不删除旧条目**，完整保留所有历史记录。每条控制在一行内（不超过 80 字）。
 
-### 8. 汇报
+### 8. 更新 interest_profile.json（自动执行，无需提醒）
+
+读取 `ArticleFeed/interest_profile.json`，做以下判断，每次只改 1-3 个字段，不整体重写：
+
+- **active_seed_papers**：这篇论文是否成为论文的核心方法论或理论锚点（会在多个章节被引用）？
+  - 是 → 加入 `active_seed_papers`，填写 `s2_id`（从本次 lookup_paper.py 的输出取）和 `why_seed`
+  - 加入前检查总数：**上限 8 篇**。若已满，同时退役最早加入且与当前研究阶段最远的一篇
+- **known_gaps**：这篇论文有没有填掉 `known_gaps` 里的某一条？
+  - 有 → 从列表中移除对应条目
+- **known_authors**：有没有值得长期追踪的新作者（高相关性、持续产出）？
+  - 有 → 加入 `known_authors`
+
+若以上三项均无变化，跳过写入。
+
+**无论是单独调用还是被 /feed 内嵌，此步骤都执行。**
+被 /feed 内嵌时，/feed 最后会重新读取文件当前状态后做会话级更新，两次写入不冲突。
+
+### 9. 汇报
 告知用户笔记已保存的位置，并简要说明最重要的一条可借鉴之处。
 
 ---
