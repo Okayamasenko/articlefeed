@@ -39,6 +39,7 @@ bash install.sh
 1. 创建 `.claude/commands` 软链接（Claude Code 通过此链接识别技能命令）
 2. 创建 `memory/` 软链接（持久记忆目录）
 3. 复制权限配置（写文件、建文件夹、下载 PDF 等操作不再弹确认）
+4. 从 `template/` 复制 `config.json`、`search_config.json`、`interest_profile.json` 初始文件（不覆盖已有文件）
 
 **第三步**：在 ArticleFeed 目录打开 Claude Code，输入 `/setup` 完成研究方向配置。
 

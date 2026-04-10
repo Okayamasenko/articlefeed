@@ -120,6 +120,7 @@ bash install.sh
 - 在 `.claude/` 下创建 `commands` 软链接，指向根目录的 `commands/`（Claude Code 通过此链接识别技能命令）
 - 创建 `memory/` 软链接，指向 Claude 的记忆目录（可直接在项目里浏览和编辑）
 - 复制权限配置（写文件、建文件夹、下载 PDF 等操作不再弹出确认）
+- 从 `template/` 复制 `config.json`、`search_config.json`、`interest_profile.json` 初始文件（不覆盖已有文件）
 
 之后对 `commands/` 和 `memory/` 的任何修改都会实时生效，无需重复操作。
 
