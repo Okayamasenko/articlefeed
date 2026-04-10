@@ -29,11 +29,15 @@ Claude 会记住你的研究背景（存在 `memory/MEMORY.md`），每次 `/fee
 
 | 文件 | 说明 |
 |------|------|
-| `recommend.py` | 三层论文推荐，从 Semantic Scholar 搜索 |
+| `recommend.py` | 关键词搜索（`--json` 模式供 `/feed` 调用） |
+| `fetch_s2_recs.py` | S2 ML 向量推荐，基于 `interest_profile.json` 种子论文 |
+| `fetch_citations.py` | 引用交集分析，被多篇种子共同引用的基础文献 |
+| `dedup_candidates.py` | 三源合并去重，★ 标注多源命中强信号 |
 | `lookup_paper.py` | 查询论文元数据（引用数、期刊、作者 h-index） |
 | `rename_pdfs.py` | 自动重命名 PDF（pdfinfo + CrossRef） |
 | `config.json` | 路径和 API key 配置 |
 | `search_config.json` | 搜索词配置，由 Claude 动态更新 |
+| `interest_profile.json` | 个性化兴趣模型，驱动三源推荐 |
 | `commands/` | `/feed` `/read` `/discuss` `/recap` `/update` `/sync` `/setup` 技能文件 |
 | `memory/MEMORY.md` | Claude 的持久记忆（自动维护） |
 | `install.sh` | 一键安装脚本 |
@@ -170,6 +174,34 @@ data_dir/                         ← 你在 config.json 里填的路径
 ---
 
 ## 更新日志
+
+### 2026-04-10
+**三源并行推荐系统 + 个性化兴趣模型**
+
+**新增三个脚本，`/feed` 从单源关键词搜索升级为三源并行架构：**
+- `fetch_s2_recs.py`：基于种子论文的 Semantic Scholar ML 向量推荐（利用 S2 内部 embedding，零本地计算）
+- `fetch_citations.py`：引用交集分析——被多篇种子论文共同引用的论文视为领域共识，自动浮现基础文献
+- `dedup_candidates.py`：三源合并去重，★ 标注多源命中论文（强信号）
+
+**新增 `interest_profile.json`，提供结构化个性化兴趣模型：**
+- `active_seed_papers`：4–8 篇核心论文，驱动 S2 ML 推荐和引用交集搜索
+- `known_gaps`：当前文献网络的空白，`/feed` 优先填补
+- `known_authors`：值得追踪新论文的作者
+- `do_not_recommend`：明确不需要的研究场景，遴选时过滤
+- 每次 `/read` 精读后自动更新，每次 `/feed` 做会话级更新，上限 8 篇种子论文（满时自动退役最早的）
+
+**修复 `recommend.py --json` 输出污染问题：**
+- 调试信息和限速提示改走 `stderr`，`stdout` 只输出纯净 JSON，三源并行可正确调用
+
+**更新命令：**
+- `/feed`：升级为 9 步三源流程，会话结束后整体更新 `interest_profile.json`
+- `/read`：新增 Step 8，精读后自动评估并更新 `interest_profile.json`
+- `/discuss`：新增 Step 4b，讨论结束后轻量更新 `known_gaps` 和 `known_authors`
+
+**更新 `install.sh`：**
+- 新增第 5 步，自动从 `template/` 复制 `config.json`、`search_config.json`、`interest_profile.json` 初始文件（不覆盖已有文件）
+
+---
 
 ### 2026-04-04
 **`/recap` 新增长记忆压缩机制**

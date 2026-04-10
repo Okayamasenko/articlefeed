@@ -94,7 +94,11 @@ articlefeed/
 ├── install.sh                ← 一键安装
 ├── config.json               ← 路径和 API key 配置（唯一需要手动编辑的文件）
 ├── search_config.json        ← 搜索词（Claude 动态维护）
-├── recommend.py              ← Semantic Scholar 三层推荐
+├── recommend.py              ← 关键词搜索（--json 模式供 /feed 调用）
+├── fetch_s2_recs.py          ← S2 ML 推荐（基于 interest_profile 种子论文）
+├── fetch_citations.py        ← 引用交集分析（种子论文共同引用的基础文献）
+├── dedup_candidates.py       ← 三源合并去重
+├── interest_profile.json     ← 结构化兴趣模型（/feed 和 /read 动态维护）
 ├── lookup_paper.py           ← 查询论文元数据（引用数、期刊、作者 h-index）
 ├── rename_pdfs.py            ← PDF 批量重命名
 ├── commands/                 ← 7 个技能文件
