@@ -59,7 +59,7 @@ data_dir/                  ← 用户在 config.json 中填写的路径（PDF �
 - 将 `reading_list.md` 的 `## 近期活跃阅读` 中所有条目移入 `## 历史归档`（按年月分组），清空活跃区
 - 生成阶段研究版图摘要，保存至 `recaps/YYYY-MM-DD_recap.md`
 
-**首次使用**：编辑 `config.json` 填写 `data_dir`，运行 `bash install.sh`（自动创建软链接并从 `template/` 复制初始配置文件），然后打开 Claude Code 输入 `/setup` 完成研究方向配置。
+**首次使用**：运行 `bash install.sh`（自动创建软链接并从 `template/` 复制初始配置文件），再编辑生成的 `config.json` 填写 `data_dir`，然后打开 Claude Code 输入 `/setup` 完成研究方向配置。
 
 ## 文档同步规则（自动执行，无需提醒）
 
