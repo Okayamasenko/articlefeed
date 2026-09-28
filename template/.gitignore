@@ -8,3 +8,8 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# 论文与笔记数据（属于 data_dir，个人内容不入库）
+*.pdf
+notes/20*/
+notes/recaps/

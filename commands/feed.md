@@ -53,6 +53,12 @@ python dedup_candidates.py \
 
 读取格式化输出。★ 标注的论文为多源命中（强信号），优先考虑。
 
+脚本已自动排除：
+- `reading_list.md` 中已读（`[x]`）的论文、`active_seed_papers` 中的种子论文
+- 标题命中 `do_not_recommend` 关键词的论文（输出顶部列出「已屏蔽」条目，可核对是否误伤）
+
+`do_not_recommend` 的自动过滤只做关键词子串匹配（英文标题，大小写不敏感）；写成描述性句子的条目不会被脚本匹配，仍需在第 5 步遴选时人工判断。
+
 ### 5. 遴选，优先三层各一篇
 
 从合并列表中分配：
@@ -95,7 +101,7 @@ keyword 搜索结果自带 tier 标签可参考，S2 推荐和引用交集的由
 - 精读的论文够不够格成为新 seed？若是，加入 `active_seed_papers`
 - `known_gaps` 有没有被这次找到的论文填掉？有则移除
 - 有没有值得追踪的新作者？加入 `known_authors`
-- 这次候选里有没有整类都不相关的？加入 `do_not_recommend`
+- 这次候选里有没有整类都不相关的？加入 `do_not_recommend`（写成**英文短关键词**，如 `"medical imaging"`，脚本才能自动过滤）
 - **active_seed_papers 上限为 8 篇**：超出时退役最早加入且与当前研究阶段最远的一篇
 
 一次写入，不分步。

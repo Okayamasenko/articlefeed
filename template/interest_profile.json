@@ -20,6 +20,6 @@
     }
   ],
   "do_not_recommend": [
-    "不相关的研究场景或主题（/feed 遴选时过滤这类候选）"
+    "不相关主题的英文关键词，如 medical imaging（标题含此词的候选会被 dedup_candidates.py 自动过滤）"
   ]
 }
