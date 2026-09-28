@@ -98,7 +98,7 @@ articlefeed/
 ├── recommend.py              ← 关键词搜索（--json 模式供 /feed 调用）
 ├── fetch_s2_recs.py          ← S2 ML 推荐（基于 interest_profile 种子论文）
 ├── fetch_citations.py        ← 引用交集分析（种子论文共同引用的基础文献）
-├── dedup_candidates.py       ← 三源合并去重
+├── dedup_candidates.py       ← 三源合并去重，排除已读/种子/屏蔽论文
 ├── interest_profile.json     ← 结构化兴趣模型（/feed 和 /read 动态维护）
 ├── lookup_paper.py           ← 查询论文元数据（引用数、期刊、作者 h-index）
 ├── rename_pdfs.py            ← PDF 批量重命名

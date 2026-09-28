@@ -14,6 +14,7 @@ import urllib.parse
 import json
 import argparse
 import os
+import sys
 import time
 
 S2_BASE = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -30,12 +31,13 @@ HEADERS = {
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "search_config.json")
 
 
-def load_config():
+def load_config(quiet=False):
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         config = json.load(f)
-    print(f"配置更新于：{config.get('last_updated', '?')}")
-    print(f"依据笔记：{', '.join(config.get('based_on_notes', []))}")
-    print(f"更新原因：{config.get('update_reason', '—')}\n")
+    out = sys.stderr if quiet else sys.stdout
+    print(f"配置更新于：{config.get('last_updated', '?')}", file=out)
+    print(f"依据笔记：{', '.join(config.get('based_on_notes', []))}", file=out)
+    print(f"更新原因：{config.get('update_reason', '—')}\n", file=out)
     return config["tiers"]
 
 
@@ -54,7 +56,7 @@ def search_s2(query, n=5, retries=3):
         except urllib.error.HTTPError as e:
             if e.code == 429 and attempt < retries - 1:
                 wait = 5 * (attempt + 1)
-                print(f"  [限速，等待 {wait}s 重试] {query[:40]}...")
+                print(f"  [限速，等待 {wait}s 重试] {query[:40]}...", file=sys.stderr)
                 time.sleep(wait)
             else:
                 raise
@@ -89,21 +91,45 @@ def format_paper(p, rank):
     )
 
 
+def paper_to_dict(p, tier_key):
+    """将 S2 paper 对象归一化为统一 schema（供 --json 和 dedup_candidates.py 使用）"""
+    venue = p.get("publicationVenue") or p.get("journal") or {}
+    journal = venue.get("name", "") if isinstance(venue, dict) else ""
+    doi = (p.get("externalIds") or {}).get("DOI", "")
+    oa_url = (p.get("openAccessPdf") or {}).get("url", "")
+    authors = [a.get("name", "") for a in p.get("authors", [])]
+    return {
+        "s2_id": p.get("paperId", ""),
+        "title": p.get("title", ""),
+        "authors": authors,
+        "year": p.get("year"),
+        "venue": journal,
+        "citation_count": p.get("citationCount") or 0,
+        "doi": doi,
+        "open_access_url": oa_url,
+        "source": "keyword_search",
+        "tier": tier_key,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=5, help="每个层级最终展示几篇")
+    parser.add_argument("--json", action="store_true", help="输出 JSON 数组（供 dedup_candidates.py 使用）")
     args = parser.parse_args()
 
-    tiers = load_config()
+    tiers = load_config(quiet=args.json)
+    all_papers_json = []
 
-    for _, tier_data in tiers.items():
+    for tier_key, tier_data in tiers.items():
         label = tier_data["label"]
         description = tier_data["description"]
         queries = tier_data["terms"]
 
-        print(f"\n{'='*60}")
-        print(f"  {label}  —  {description}")
-        print(f"{'='*60}")
+        if not args.json:
+            print(f"\n{'='*60}")
+            print(f"  {label}  —  {description}")
+            print(f"{'='*60}")
 
         seen = set()
         papers = []
@@ -115,20 +141,27 @@ def main():
                     if pid and pid not in seen:
                         seen.add(pid)
                         papers.append(p)
-                time.sleep(2)  # S2 免费 API 限速
+                time.sleep(2)
             except Exception as e:
-                print(f"  [搜索失败] {q}: {e}")
+                if not args.json:
+                    print(f"  [搜索失败] {q}: {e}")
 
         papers.sort(key=lambda x: x.get("citationCount") or 0, reverse=True)
         papers = papers[:args.n]
 
-        for i, p in enumerate(papers, 1):
-            print(format_paper(p, i))
-            print()
+        if args.json:
+            all_papers_json.extend(paper_to_dict(p, tier_key) for p in papers)
+        else:
+            for i, p in enumerate(papers, 1):
+                print(format_paper(p, i))
+                print()
 
-    print("\n" + "="*60)
-    print("  候选论文拉取完成，等待 Claude 筛选推荐。")
-    print("="*60)
+    if args.json:
+        print(json.dumps(all_papers_json, ensure_ascii=False, indent=2))
+    else:
+        print("\n" + "="*60)
+        print("  候选论文拉取完成，等待 Claude 筛选推荐。")
+        print("="*60)
 
 
 if __name__ == "__main__":

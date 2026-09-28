@@ -19,3 +19,8 @@ __pycache__/
 # 大文件 / 编译产物
 DesktopApp.zip
 DesktopApp/ArticleFeed.app
+
+# 论文与笔记数据（属于 data_dir，个人内容不入库；防止 data_dir 误设在仓库内时被提交）
+*.pdf
+notes/20*/
+notes/recaps/

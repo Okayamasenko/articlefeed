@@ -63,10 +63,12 @@ def format_output(paper):
     journal_name = venue.get("name", "N/A") if isinstance(venue, dict) else "N/A"
 
     doi = (paper.get("externalIds") or {}).get("DOI", "N/A")
+    paper_id = paper.get("paperId", "N/A")
 
     lines.append("=" * 60)
     lines.append(f"标题: {title}")
     lines.append(f"年份: {year}")
+    lines.append(f"S2 ID: {paper_id}")
     lines.append(f"DOI:  {doi}")
     lines.append(f"期刊: {journal_name}")
     lines.append(f"被引: {citations} 次")
@@ -99,6 +101,7 @@ def main():
     parser = argparse.ArgumentParser(description="查询论文元数据")
     parser.add_argument("--doi", help="论文 DOI")
     parser.add_argument("--title", help="论文标题（模糊搜索）")
+    parser.add_argument("--json", action="store_true", help="输出原始 JSON（含 paperId）")
     args = parser.parse_args()
 
     if not args.doi and not args.title:
@@ -114,7 +117,10 @@ def main():
                 print("未找到匹配论文")
                 sys.exit(1)
 
-        print(format_output(paper))
+        if args.json:
+            print(json.dumps(paper, ensure_ascii=False, indent=2))
+        else:
+            print(format_output(paper))
     except Exception as e:
         print(f"查询失败: {e}")
         sys.exit(1)

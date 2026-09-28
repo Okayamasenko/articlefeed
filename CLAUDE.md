@@ -26,7 +26,7 @@ ArticleFeed/               ← 项目根目录（克隆后得到的文件夹）
   recommend.py             ← 关键词搜索脚本（--json 模式，/feed 时调用）
   fetch_s2_recs.py         ← S2 ML 向量推荐（基于 interest_profile 种子论文）
   fetch_citations.py       ← 引用交集分析（种子论文共同引用的基础文献）
-  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号）
+  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号；排除已读/种子/do_not_recommend）
   rename_pdfs.py           ← PDF 批量重命名（Author_Year_Keywords.pdf 格式）
   lookup_paper.py          ← 查询论文元数据（DOI → 引用数、期刊、作者 h-index）
 
@@ -63,7 +63,7 @@ data_dir/                  ← 用户在 config.json 中填写的路径（PDF �
 
 ## 文档同步规则（自动执行，无需提醒）
 
-每次新增或修改 `commands/` 下任何文件后，立即检查并更新以下三个文件，确保新命令已被记录、描述一致：
+每次新增或修改 `commands/` 下任何文件后，立即检查并更新以下四个文件，确保新命令已被记录、描述一致：
 
 1. **README.md** — 命令循环图、"包含什么"表格、"日常使用"表格
 2. **CLAUDE.md**（本文件）— 可用命令表格

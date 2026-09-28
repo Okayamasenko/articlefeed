@@ -32,7 +32,7 @@ Claude 会记住你的研究背景（存在 `memory/MEMORY.md`），每次 `/fee
 | `recommend.py` | 关键词搜索（`--json` 模式供 `/feed` 调用） |
 | `fetch_s2_recs.py` | S2 ML 向量推荐，基于 `interest_profile.json` 种子论文 |
 | `fetch_citations.py` | 引用交集分析，被多篇种子共同引用的基础文献 |
-| `dedup_candidates.py` | 三源合并去重，★ 标注多源命中强信号 |
+| `dedup_candidates.py` | 三源合并去重，★ 标注多源命中强信号；自动排除已读、种子论文和 `do_not_recommend` 命中 |
 | `lookup_paper.py` | 查询论文元数据（引用数、期刊、作者 h-index） |
 | `rename_pdfs.py` | 自动重命名 PDF（pdfinfo + CrossRef） |
 | `config.json` | 路径和 API key 配置 |
@@ -81,8 +81,25 @@ sudo apt install poppler-utils
 
 Python 仅使用标准库，无需额外安装。
 
-### 第一步：填写路径
-编辑 `config.json`，填入你的研究数据文件夹路径（PDF 放这里，笔记自动存入其中的 `notes/` 子目录）：
+### 第一步：运行安装脚本
+
+打开终端，进入 ArticleFeed 目录，运行安装脚本：
+
+```bash
+cd /path/to/ArticleFeed   # 将路径替换为实际位置，Mac 上可把文件夹直接拖入终端窗口自动填入路径
+bash install.sh
+```
+
+脚本会自动完成：
+- 在 `.claude/` 下创建 `commands` 软链接，指向根目录的 `commands/`（Claude Code 通过此链接识别技能命令）
+- 创建 `memory/` 软链接，指向 Claude 的记忆目录（可直接在项目里浏览和编辑）
+- 复制权限配置（写文件、建文件夹、下载 PDF 等操作不再弹出确认）
+- 从 `template/` 复制 `config.json`、`search_config.json`、`interest_profile.json` 初始文件（不覆盖已有文件）
+
+之后对 `commands/` 和 `memory/` 的任何修改都会实时生效，无需重复操作。
+
+### 第二步：填写路径
+编辑安装脚本生成的 `config.json`，填入你的研究数据文件夹路径（PDF 放这里，笔记自动存入其中的 `notes/` 子目录）：
 
 ```json
 {
@@ -106,23 +123,6 @@ Windows:    C:\Users\yourname\Documents\Notes
 **不填 API key 也能正常使用**，Semantic Scholar 免费层无需注册。有 key 时速率限制更宽松，搜索更快；没有 key 时遇到限速会自动重试，不影响结果。
 
 如需申请：https://www.semanticscholar.org/product/api
-
-### 第二步：运行安装脚本
-
-打开终端，进入 ArticleFeed 目录，运行安装脚本：
-
-```bash
-cd /path/to/ArticleFeed   # 将路径替换为实际位置，Mac 上可把文件夹直接拖入终端窗口自动填入路径
-bash install.sh
-```
-
-脚本会自动完成：
-- 在 `.claude/` 下创建 `commands` 软链接，指向根目录的 `commands/`（Claude Code 通过此链接识别技能命令）
-- 创建 `memory/` 软链接，指向 Claude 的记忆目录（可直接在项目里浏览和编辑）
-- 复制权限配置（写文件、建文件夹、下载 PDF 等操作不再弹出确认）
-- 从 `template/` 复制 `config.json`、`search_config.json`、`interest_profile.json` 初始文件（不覆盖已有文件）
-
-之后对 `commands/` 和 `memory/` 的任何修改都会实时生效，无需重复操作。
 
 ### 第三步：运行 `/setup`，让 Claude 帮你完成剩余配置
 在 ArticleFeed 目录打开 Claude Code：
@@ -174,7 +174,41 @@ data_dir/                         ← 你在 config.json 里填的路径
 
 ---
 
+## 使用注意：自然语言指令的漂移问题
+
+ArticleFeed 的命令（`/read`、`/feed` 等）是用自然语言写的 `.md` 文件，由 Claude 解释执行。这和代码有本质区别：
+
+| 代码命令 | 自然语言命令 |
+|---------|------------|
+| 格式错误 → 报错，执行中断 | 格式不完整 → 静默通过，输出降级 |
+| 约束由运行时强制 | 约束靠模型解释，随上下文漂移 |
+| 行为可复现 | 行为可漂移 |
+
+**具体表现**：命令文件里写"各作者：机构、职级、h-index（如可查）"，对 Claude 来说是建议性字段，不是硬约束。同一条命令在有上下文参照（刚看过格式正确的上一篇笔记）和没有参照（新对话冷启动）时，产出质量会不一样。
+
+**应对方式**：命令文件里需要用"**必须**"、"**不可**"、"**至少 N 条**"这类强制语言，而不是字段列表；对关键格式要求附上反例（"以下写法是错的"）比正面描述更有约束力；对重要输出格式给出可直接复制的示例。
+
+这个系统的命令文件会持续按这一原则修订。若发现某次执行结果明显不符合预期，可运行 `/sync` 检查命令文件是否需要补强。
+
+---
+
 ## 更新日志
+
+### 2026-09-28
+**推荐去重升级，修复模板与安装问题**
+
+- `dedup_candidates.py`：候选列表自动排除 `reading_list.md` 中已读的论文和 `active_seed_papers` 种子论文，不再重复推荐；`do_not_recommend` 从只写不用变为真正生效——标题命中关键词的候选自动屏蔽，并在输出顶部列出供核对
+- `do_not_recommend` 建议写成英文短关键词（如 `"medical imaging"`），描述性句子仍由 Claude 在遴选时判断
+- `template/`：同步最新脚本。此前模板里的 `recommend.py` 不支持 `--json`、`lookup_paper.py` 不输出 S2 ID，导致新用户的 `/feed` 报错、种子论文无法写入
+- `.claude/commands` 改为指向 `commands/` 的软链接（此前仓库里存的是一份独立拷贝，容易与 `commands/` 不同步）
+- `.gitignore`：新增 `*.pdf`、`notes/20*/`、`notes/recaps/`，防止论文和个人笔记被误提交
+- 配置步骤调整顺序：先运行 `install.sh` 生成 `config.json`，再填写路径（克隆后 `config.json` 并不存在）
+
+### 2026-04-23
+**修复 dedup_candidates.py JSON 解析错误，补全 template 缺失脚本**
+
+- `dedup_candidates.py`：修复当 stderr 日志混入输出文件时的解析崩溃问题——改用 `JSONDecoder.raw_decode()` 精确定位 JSON 数组边界，不再受日志行中的 `]` 字符干扰
+- `template/`：补入 `dedup_candidates.py`、`fetch_s2_recs.py`、`fetch_citations.py`，新用户克隆后可直接运行完整 `/feed` 三源流程
 
 ### 2026-04-10
 **三源并行推荐系统 + 个性化兴趣模型**
