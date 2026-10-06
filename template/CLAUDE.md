@@ -69,7 +69,7 @@ data_dir/                  ← 用户在 config.json 中填写的路径（PDF �
 2. `search_config.json` `based_on_notes` — 追加笔记文件名，**不删除旧条目**，完整保留
 3. 建日期文件夹，复制 PDF，保存 MD — 一步完成
 4. **不修改** `search_config.json` 的 `update_reason`（仅 `/feed` 更新检索词时写入）
-5. `interest_profile.json` — 评估是否加入 `active_seed_papers`、填掉 `known_gaps`、追加 `known_authors`（见 read.md Step 8）
+5. `interest_profile.json` — 评估是否加入 `active_seed_papers`、填掉 `known_gaps`、追加 `known_authors`（见 read.md「阅读记录同步」）
 
 **`/recap` 时额外执行**（自动执行，无需提醒）：
 - 将 `reading_list.md` 的 `## 近期活跃阅读` 中所有条目移入 `## 历史归档`（按年月分组），清空活跃区

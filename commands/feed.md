@@ -89,7 +89,7 @@ keyword 搜索结果自带 tier 标签可参考，S2 推荐和引用交集的由
    - `search_config.json` `based_on_notes`：追加笔记文件名（不删旧条目）
    - `MEMORY.md` `Reading Progress`：追加一行（不删旧条目）
 
-4. **执行 /read 的 interest_profile 更新步骤**（见 read.md Step 8）
+4. **执行 /read 的 interest_profile 更新**（见 read.md「阅读记录同步」）
 
 **如果没有开放获取 PDF：**
 注明获取方式（DOI 链接 / arXiv ID）。
