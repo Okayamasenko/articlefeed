@@ -69,6 +69,8 @@ python dedup_candidates.py \
 
 keyword 搜索结果自带 tier 标签可参考，S2 推荐和引用交集的由 Claude 判断归哪层。
 
+相关性相近时，优先选带 `[顶刊]`（期刊在 `top_journals` 中）或 `[追踪作者]`（作者在 `known_authors` 中）标记的论文。标记只影响挑选顺序，不增加推荐数量。
+
 **边界情况**：若本次候选中某一层确实没有合适论文，不强行凑数，可从其他层补选一篇，在 recommendations.md 里注明。质量优先，三层结构其次。
 
 ### 6. 对每篇选中的论文：尝试获取 PDF

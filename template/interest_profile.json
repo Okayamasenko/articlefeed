@@ -10,6 +10,9 @@
   "known_gaps": [
     "你的文献网络目前缺少的研究角度（/feed 优先填补这里）"
   ],
+  "top_journals": [
+    "你领域的顶刊或目标期刊名称（与 Semantic Scholar 显示的期刊名一致，候选会被标记 [顶刊]）"
+  ],
   "known_authors": [
     {
       "name": "值得追踪新论文的作者",

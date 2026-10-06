@@ -29,7 +29,7 @@
 根据用户描述，精准修改对应字段：
 - 只改变化的部分，不动其他内容
 - 如果新增了理论框架，加入 Key Decisions 或研究摘要
-- 如果 Relevant Journals 需要调整，同步更新
+- 如果顶刊或目标期刊需要调整，同步更新 `interest_profile.json` 的 `top_journals`
 
 ### 4. 重新生成 search_config.json 搜索词
 根据更新后的研究方向，重新生成三个层级的搜索词：

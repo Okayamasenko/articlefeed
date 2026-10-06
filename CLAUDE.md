@@ -36,13 +36,13 @@
 ArticleFeed/               ← 项目根目录（克隆后得到的文件夹）
   config.json              ← 唯一需要用户手动编辑的文件（填写 data_dir 路径）
   search_config.json       ← Semantic Scholar 搜索词，由 Claude 在 /feed 时动态更新
-  interest_profile.json    ← 结构化兴趣模型（种子论文/文献缺口/追踪作者），/feed 和 /read 动态维护
+  interest_profile.json    ← 结构化兴趣模型（种子论文/文献缺口/顶刊/追踪作者），/feed 和 /read 动态维护
   commands/                ← 技能文件（.claude/commands 软链接指向此目录）
   memory/MEMORY.md         ← Claude 的持久记忆（install.sh 创建软链接到用户 ~/.claude/）
   recommend.py             ← 关键词搜索脚本（--json 模式，/feed 时调用）
   fetch_s2_recs.py         ← S2 ML 向量推荐（基于 interest_profile 种子论文）
   fetch_citations.py       ← 引用交集分析（种子论文共同引用的基础文献）
-  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号；排除已读/种子/do_not_recommend）
+  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号；排除已读/种子/do_not_recommend；标记顶刊/追踪作者）
   rename_pdfs.py           ← PDF 批量重命名（Author_Year_Keywords.pdf 格式）
   lookup_paper.py          ← 查询论文元数据（DOI → 引用数、期刊、作者 h-index）
 

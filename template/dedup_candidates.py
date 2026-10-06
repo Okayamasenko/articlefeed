@@ -4,6 +4,8 @@
 排除已读论文、种子论文和 do_not_recommend 命中的论文，
 按引用数排序，输出供 Claude 阅读的格式化列表。
 
+并按 interest_profile.json 标记 [顶刊]（top_journals）和 [追踪作者]（known_authors）。
+
 排除依据（均从本地文件运行时读取，不写入代码）：
   - interest_profile.json 的 active_seed_papers（按 s2_id / 标题）
   - data_dir/notes/reading_list.md 中的已读条目（按标题）
@@ -63,6 +65,47 @@ def load_candidates(paths):
 def norm_title(t):
     """标题归一化：小写，只保留字母数字（含中日韩字符），用于跨来源比对"""
     return re.sub(r"[\W_]+", "", (t or "").lower())
+
+
+def norm_venue(v):
+    """期刊名归一化：忽略大小写、标点、开头的 The，& 视同 and"""
+    v = (v or "").lower().replace("&", " and ")
+    v = re.sub(r"^\s*the\s+", "", v)
+    return norm_title(v)
+
+
+def load_markers():
+    """返回 (顶刊归一化名集合, {归一化作者名: 原名})，用于给候选打标记"""
+    journals, authors = set(), {}
+    profile_path = os.path.join(_dir, "interest_profile.json")
+    if not os.path.exists(profile_path):
+        return journals, authors
+    try:
+        with open(profile_path, encoding="utf-8") as f:
+            profile = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[dedup] 读取 interest_profile.json 失败，跳过顶刊/作者标记: {e}", file=sys.stderr)
+        return journals, authors
+    for j in profile.get("top_journals", []):
+        name = j.get("name", "") if isinstance(j, dict) else j
+        if isinstance(name, str) and norm_venue(name):
+            journals.add(norm_venue(name))
+    for a in profile.get("known_authors", []):
+        if isinstance(a, dict) and a.get("follow", True) and norm_title(a.get("name")):
+            authors[norm_title(a["name"])] = a["name"]
+    return journals, authors
+
+
+def apply_markers(papers, journals, authors):
+    """给候选写入 is_top_journal 和 tracked_authors 字段，返回 (顶刊数, 追踪作者数)"""
+    n_j = n_a = 0
+    for p in papers:
+        p["is_top_journal"] = bool(journals) and norm_venue(p.get("venue")) in journals
+        p["tracked_authors"] = [authors[norm_title(n)] for n in p.get("authors", [])
+                                if norm_title(n) in authors]
+        n_j += p["is_top_journal"]
+        n_a += bool(p["tracked_authors"])
+    return n_j, n_a
 
 
 def load_exclusions():
@@ -173,10 +216,17 @@ def format_paper(p, rank):
     if len(authors) > 3:
         author_str += " et al."
 
+    marks = []
+    if p.get("is_top_journal"):
+        marks.append("[顶刊]")
+    if p.get("tracked_authors"):
+        marks.append(f"[追踪作者：{', '.join(p['tracked_authors'])}]")
+
     lines = [
         f"[{rank}] **{title}** ({year})",
         f"    {author_str} | {venue}",
-        f"    来源：{source_str}" + (f"  [{tier_str}]" if tier_str else ""),
+        f"    来源：{source_str}" + (f"  [{tier_str}]" if tier_str else "")
+        + (f"  {' '.join(marks)}" if marks else ""),
         f"    引用：{citations} | 开放获取：{oa}" + (f" | DOI: {doi}" if doi else ""),
     ]
     return "\n".join(lines)
@@ -191,12 +241,13 @@ def main():
     papers = load_candidates(paths)
     papers = dedup(papers)
     papers, n_read, blocked = apply_exclusions(papers, *load_exclusions())
+    n_top, n_tracked = apply_markers(papers, *load_markers())
     papers.sort(key=lambda x: x.get("citation_count") or 0, reverse=True)
 
     print(f"\n{'='*60}")
     print(f"  合并候选论文（共 {len(papers)} 篇，已去重）")
     print(f"  已排除：已读/种子论文 {n_read} 篇，do_not_recommend 命中 {len(blocked)} 篇")
-    print(f"  ★ = 多源命中（强信号）")
+    print(f"  ★ = 多源命中（强信号）；[顶刊] {n_top} 篇，[追踪作者] {n_tracked} 篇")
     print(f"{'='*60}\n")
     for t, k in blocked:
         print(f"  [已屏蔽 · {k}] {t}")
@@ -211,6 +262,7 @@ def main():
     print(f"  请从以上列表中，优先三层各选一篇：")
     print(f"  Tier 1 直接相关 / Tier 2 大领域 / Tier 3 交叉学科")
     print(f"  参考 interest_profile.known_gaps 优先填补空白")
+    print(f"  相关性相近时，优先选 ★、[顶刊]、[追踪作者]")
     print(f"{'='*60}")
 
 
