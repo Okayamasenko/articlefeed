@@ -2,6 +2,22 @@
 
 学术论文阅读管理系统，运行在 Claude Code 中。帮研究者做三件事：找论文、读论文、追踪进度。
 
+## 设计原则
+
+修改命令、脚本或流程前，先对照以下原则判断改动是否必要。
+
+**系统只做四件事**：
+1. **推荐**：根据我的研究，推荐我要读的论文（`/feed`）
+2. **精读**：看清论文的脉络和核心亮点，弄清它如何应用到我的研究里（`/read`）
+3. **个性化**：越用越懂我，依靠两份记录——个人兴趣记录（`interest_profile.json`）和已读文章记录（`reading_list.md`）
+4. **总结**：对已读文章做总结，让我知道自己的论文还差什么（`/recap`）
+
+**做事原则**：
+- 大方向已定，不做多余的动作；改动只在上述四件事的结构内打磨，不新增模块
+- 少而精：不接新的数据源 API，不增加推荐数量。读得越多越容易乱，迷失在信息里
+- 精读的重点是**核心亮点**和**如何用到我的论文里**；论文之间的对话关系不是每篇的重点
+- 动手前先确认改动是否必要，不确定时先提方案、等确认
+
 ## 可用命令
 
 | 命令 | 功能 |
@@ -20,13 +36,13 @@
 ArticleFeed/               ← 项目根目录（克隆后得到的文件夹）
   config.json              ← 唯一需要用户手动编辑的文件（填写 data_dir 路径）
   search_config.json       ← Semantic Scholar 搜索词，由 Claude 在 /feed 时动态更新
-  interest_profile.json    ← 结构化兴趣模型（种子论文/文献缺口/追踪作者），/feed 和 /read 动态维护
+  interest_profile.json    ← 结构化兴趣模型（种子论文/文献缺口/顶刊/追踪作者），/feed 和 /read 动态维护
   commands/                ← 技能文件（.claude/commands 软链接指向此目录）
   memory/MEMORY.md         ← Claude 的持久记忆（install.sh 创建软链接到用户 ~/.claude/）
   recommend.py             ← 关键词搜索脚本（--json 模式，/feed 时调用）
   fetch_s2_recs.py         ← S2 ML 向量推荐（基于 interest_profile 种子论文）
   fetch_citations.py       ← 引用交集分析（种子论文共同引用的基础文献）
-  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号；排除已读/种子/do_not_recommend）
+  dedup_candidates.py      ← 三源合并去重（★ 标注多源命中强信号；排除已读/种子/do_not_recommend；标记顶刊/追踪作者）
   rename_pdfs.py           ← PDF 批量重命名（Author_Year_Keywords.pdf 格式）
   lookup_paper.py          ← 查询论文元数据（DOI → 引用数、期刊、作者 h-index）
 
@@ -53,7 +69,7 @@ data_dir/                  ← 用户在 config.json 中填写的路径（PDF �
 2. `search_config.json` `based_on_notes` — 追加笔记文件名，**不删除旧条目**，完整保留
 3. 建日期文件夹，复制 PDF，保存 MD — 一步完成
 4. **不修改** `search_config.json` 的 `update_reason`（仅 `/feed` 更新检索词时写入）
-5. `interest_profile.json` — 评估是否加入 `active_seed_papers`、填掉 `known_gaps`、追加 `known_authors`（见 read.md Step 8）
+5. `interest_profile.json` — 评估是否加入 `active_seed_papers`、填掉 `known_gaps`、追加 `known_authors`（见 read.md「阅读记录同步」）
 
 **`/recap` 时额外执行**（自动执行，无需提醒）：
 - 将 `reading_list.md` 的 `## 近期活跃阅读` 中所有条目移入 `## 历史归档`（按年月分组），清空活跃区

@@ -53,7 +53,7 @@
 
 **更新 `memory/MEMORY.md`**：
 - 填写研究主题、核心变量/框架、当前状态
-- 根据用户描述的领域填写 Relevant Journals
+- 根据用户描述的领域，向用户确认领域顶刊和目标期刊，写入 `interest_profile.json` 的 `top_journals`
 
 **生成初始 `search_config.json`**：
 - 根据研究主题和关键词，为三个层级各生成 4-5 条搜索词

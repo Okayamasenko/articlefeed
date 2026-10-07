@@ -32,12 +32,12 @@ Claude 会记住你的研究背景（存在 `memory/MEMORY.md`），每次 `/fee
 | `recommend.py` | 关键词搜索（`--json` 模式供 `/feed` 调用） |
 | `fetch_s2_recs.py` | S2 ML 向量推荐，基于 `interest_profile.json` 种子论文 |
 | `fetch_citations.py` | 引用交集分析，被多篇种子共同引用的基础文献 |
-| `dedup_candidates.py` | 三源合并去重，★ 标注多源命中强信号；自动排除已读、种子论文和 `do_not_recommend` 命中 |
+| `dedup_candidates.py` | 三源合并去重，★ 标注多源命中强信号；自动排除已读、种子论文和 `do_not_recommend` 命中；标记 [顶刊]、[追踪作者] |
 | `lookup_paper.py` | 查询论文元数据（引用数、期刊、作者 h-index） |
 | `rename_pdfs.py` | 自动重命名 PDF（pdfinfo + CrossRef） |
 | `config.json` | 路径和 API key 配置 |
 | `search_config.json` | 搜索词配置，由 Claude 动态更新 |
-| `interest_profile.json` | 个性化兴趣模型，驱动三源推荐 |
+| `interest_profile.json` | 个性化兴趣模型，驱动三源推荐；`top_journals`、`known_authors` 用于标记候选 |
 | `commands/` | `/feed` `/read` `/discuss` `/recap` `/update` `/sync` `/setup` 技能文件 |
 | `memory/MEMORY.md` | Claude 的持久记忆（自动维护） |
 | `install.sh` | 一键安装脚本 |
@@ -193,6 +193,15 @@ ArticleFeed 的命令（`/read`、`/feed` 等）是用自然语言写的 `.md` �
 ---
 
 ## 更新日志
+
+### 2026-10-06
+**推荐候选标记顶刊和追踪作者**
+
+- `dedup_candidates.py`：候选期刊在 `interest_profile.json` 的 `top_journals` 中时标记 `[顶刊]`，作者在 `known_authors` 中时标记 `[追踪作者]`；匹配忽略大小写、标点和开头的 The
+- `/feed`：相关性相近时优先选带标记的论文；标记只影响挑选顺序，不新增数据源、不增加推荐数量
+- `interest_profile.json` 新增 `top_journals` 字段，由 `/setup`、`/update` 维护；`MEMORY.md` 的 Relevant Journals 不再单独记录期刊
+- `/read`：作者介绍增加常用研究方法和代表作；命令文件精简为最少指令版本
+- `CLAUDE.md`：新增设计原则
 
 ### 2026-09-28
 **推荐去重升级，修复模板与安装问题**

@@ -1,125 +1,71 @@
 # /feed — 论文推荐
 
-执行以下步骤，不需要用户确认中间过程，完成后汇报结果。
+根据研究方向和阅读记录推荐论文，能拿到原文的直接精读。全程不向用户确认，完成后汇报。
 
-## 步骤
+## 读取
 
-### 1. 读取当前阅读状态
+`data_dir` 从 `config.json` 读取。需要读取：
+- `data_dir/notes/reading_list.md` 的 `## 近期活跃阅读`
+- `memory/MEMORY.md` 的研究设计部分（跳过 Reading Progress）
+- 项目根目录的 `interest_profile.json`（全部字段）
+- `data_dir/notes/recaps/` 下最新一份 recap（如果有）
 
-读取 `config.json` 获取 `data_dir`（`notes_dir` = `data_dir/notes`），然后读取以下文件：
+## 更新搜索词
 
-**必读：**
-- `data_dir/notes/reading_list.md` 的 `## 近期活跃阅读` 区块
-- `memory/MEMORY.md`（研究设计/变量/方法论；**跳过 Reading Progress 区块**，该区块已由 interest_profile 覆盖）
-- `ArticleFeed/interest_profile.json`（全部字段：active_seed_papers / known_gaps / known_authors / do_not_recommend）
-
-**若存在则读：**
-- `data_dir/notes/recaps/` 下最新一份 `YYYY-MM-DD_recap.md`
-
-### 2. 更新 search_config.json
-
-基于 MEMORY.md 研究方向 + `interest_profile.known_gaps`（缺什么就往 tier1/tier2 加对应词）更新三层搜索词，同时更新：
-- `last_updated`：今天日期
-- `based_on_notes`：追加本次参考的笔记文件名（不删旧条目）
-- `update_reason`：2-4 句说明本次更新依据
-
-搜索词原则：
-- Tier 1：核心研究问题直接相关的关键词
+根据研究方向和 `known_gaps` 更新 `search_config.json` 的三层搜索词：
+- Tier 1：与核心研究问题直接相关
 - Tier 2：相同机制或方法，不同研究场域
-- Tier 3：野卡，跨领域灵感，技术侧为主
+- Tier 3：跨领域灵感，偏技术侧
 
-### 3. 并行运行三个搜索脚本
+同时更新 `last_updated`；把本次参考的笔记文件名追加到 `based_on_notes`（不删除旧条目）；在 `update_reason` 里用 2–4 句话说明更新依据。
 
-三个脚本互相独立，可同时运行：
+## 拉取候选
 
-```bash
-python recommend.py --json > /tmp/candidates_kw.json
-python fetch_s2_recs.py > /tmp/candidates_s2recs.json
-python fetch_citations.py > /tmp/candidates_citations.json
-```
-
-- `recommend.py --json`：关键词搜索（基于 search_config.json）
-- `fetch_s2_recs.py`：S2 ML 推荐（基于 interest_profile.active_seed_papers）
-- `fetch_citations.py`：引用交集分析（基于种子论文的参考文献，被多篇共同引用的基础文献）
-
-### 4. 合并去重
+三个脚本互相独立，并行运行，各自把 JSON 输出到一个临时文件，然后合并：
 
 ```bash
-python dedup_candidates.py \
-  /tmp/candidates_kw.json \
-  /tmp/candidates_s2recs.json \
-  /tmp/candidates_citations.json
+python recommend.py --json > kw.json          # 关键词搜索
+python fetch_s2_recs.py > s2recs.json         # 种子论文的相似推荐
+python fetch_citations.py > citations.json    # 种子论文共同引用的基础文献
+python dedup_candidates.py kw.json s2recs.json citations.json
 ```
 
-读取格式化输出。★ 标注的论文为多源命中（强信号），优先考虑。
+`dedup_candidates.py` 已自动排除已读论文、种子论文和命中 `do_not_recommend` 的论文，并标记 ★（多源命中）、`[顶刊]`、`[追踪作者]`。
 
-脚本已自动排除：
-- `reading_list.md` 中已读（`[x]`）的论文、`active_seed_papers` 中的种子论文
-- 标题命中 `do_not_recommend` 关键词的论文（输出顶部列出「已屏蔽」条目，可核对是否误伤）
+## 挑选
 
-`do_not_recommend` 的自动过滤只做关键词子串匹配（英文标题，大小写不敏感）；写成描述性句子的条目不会被脚本匹配，仍需在第 5 步遴选时人工判断。
+Tier 1、2、3 各选一篇。Tier 1 优先选能填补 `known_gaps` 的论文。关键词搜索的结果自带层级标签，其他来源由你判断归入哪一层。
 
-### 5. 遴选，优先三层各一篇
+- 相关性相近时，优先选带 ★、`[顶刊]`、`[追踪作者]` 的论文
+- 某一层没有合适的论文就不凑数，可以从其他层补一篇，并在推荐文件里注明
+- 质量优先于三层结构，不增加推荐数量
 
-从合并列表中分配：
+## 获取原文并精读
 
-- **Tier 1 直接相关**：与论文研究问题直接对应，优先选能填 `interest_profile.known_gaps` 的
-- **Tier 2 大领域相关**：相同偏见机制或评估方法，不同研究场域
-- **Tier 3 交叉学科**：跨领域灵感，技术侧或社会科学侧均可
+- **有开放获取 PDF**：下载到 `data_dir/notes/YYYY-MM-DD/Name/Name.pdf`，然后按 `/read` 的规则精读，并同步阅读记录
+- **没有开放获取 PDF**：只记录获取方式（DOI 链接或 arXiv ID）
 
-keyword 搜索结果自带 tier 标签可参考，S2 推荐和引用交集的由 Claude 判断归哪层。
+## 更新 interest_profile.json
 
-**边界情况**：若本次候选中某一层确实没有合适论文，不强行凑数，可从其他层补选一篇，在 recommendations.md 里注明。质量优先，三层结构其次。
+精读可能已经改过这个文件，所以先重新读取，再一次性写入本次会话的更新：
+- 新精读的论文是否应成为种子论文：上限 8 篇，满了就退役最早加入、且与当前研究阶段最远的一篇
+- 被本次论文填补的 `known_gaps`：删除
+- 值得追踪的新作者：加入 `known_authors`
+- 整类都不相关的候选：加入 `do_not_recommend`，写成英文短关键词（如 `"medical imaging"`），脚本才能自动过滤
 
-### 6. 对每篇选中的论文：尝试获取 PDF
+## 推荐文件
 
-**如果有开放获取 URL：**
-1. 生成规范文件名 `Author_Year_Keywords.pdf`，下载：
-   ```bash
-   curl -L -o "{data_dir}/Author_Year_Keywords.pdf" "PDF_URL"
-   ```
-2. 执行完整精读（步骤与 `/read` 完全一致，包括四节笔记）：
-   - `pdftotext "PDF路径" -` 提取全文
-   - `python lookup_paper.py --doi "DOI"` 获取元数据
-   - 生成四节笔记（一、论文权重 / 二、论文亮点 / 三、可借鉴之处 / 四、如何用到论文里）
-   - 建文件夹 `notes/YYYY-MM-DD/PaperName/`，存 PDF 和 MD
+写入 `data_dir/notes/YYYY-MM-DD/recommendations.md`：
 
-3. 同步三处（自动执行，不提醒）：
-   - `reading_list.md` 的 `## 近期活跃阅读`：添加 `[x]` 条目，附相对链接
-   - `search_config.json` `based_on_notes`：追加笔记文件名（不删旧条目）
-   - `MEMORY.md` `Reading Progress`：追加一行（不删旧条目）
-
-4. **执行 /read 的 interest_profile 更新步骤**（见 read.md Step 8）
-
-**如果没有开放获取 PDF：**
-注明获取方式（DOI 链接 / arXiv ID）。
-
-### 7. 会话级更新 interest_profile.json
-
-**先重新读取 `interest_profile.json` 当前状态**（步骤 6 的精读可能已修改过），再做本次会话的整体更新：
-
-- 精读的论文够不够格成为新 seed？若是，加入 `active_seed_papers`
-- `known_gaps` 有没有被这次找到的论文填掉？有则移除
-- 有没有值得追踪的新作者？加入 `known_authors`
-- 这次候选里有没有整类都不相关的？加入 `do_not_recommend`（写成**英文短关键词**，如 `"medical imaging"`，脚本才能自动过滤）
-- **active_seed_papers 上限为 8 篇**：超出时退役最早加入且与当前研究阶段最远的一篇
-
-一次写入，不分步。
-
-### 8. 写入推荐文件
-
-将筛选结果写入 `data_dir/notes/YYYY-MM-DD/recommendations.md`（文件夹不存在则新建）。
-
-格式：
 ```markdown
 # 推荐论文 YYYY-MM-DD
 
 ## Tier 1 · 核心
-**[论文标题]**
+**论文标题**
 作者 (年份) | 期刊 | 引用数
-来源：关键词搜索 + S2推荐
+来源：关键词搜索 + S2推荐  [顶刊]
 推荐理由：……
-状态：✓ 已下载并精读 / 📥 获取方式：[DOI链接](...)
+状态：✓ 已下载并精读 / 📥 获取方式：[DOI 链接](...)
 
 ## Tier 2 · 邻域
 ……
@@ -128,5 +74,6 @@ keyword 搜索结果自带 tier 标签可参考，S2 推荐和引用交集的由
 ……
 ```
 
-### 9. 汇报
-告诉用户：哪几篇已直接精读完毕，哪几篇需要手动获取（附 DOI 链接）。
+## 汇报
+
+告诉用户哪几篇已经精读完毕，哪几篇需要手动获取，并附上 DOI 链接。

@@ -43,4 +43,4 @@ When /recap runs:
 <!-- Claude 自动维护，追加不删除，每行格式：- PaperName.md — 一句话核心贡献 -->
 
 ## Relevant Journals
-<!-- 填写你的研究领域核心期刊，Claude 评估论文权重时会用到 -->
+<!-- 顶刊和目标期刊统一记录在 interest_profile.json 的 top_journals，/feed 据此标记 [顶刊] -->
